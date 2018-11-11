@@ -3,14 +3,14 @@ import inspect
 from functools import wraps
 
 
-def profile(elem):
+def profile(elem, *args, **kwargs):
     if inspect.isfunction(elem):
         @wraps(elem)
         def wrapped(*args, **kwargs):
-            print('`%s` started' % (elem.__name__))
+            print('`%s` started' % (elem.__qualname__))
             start_time = datetime.now()
             res = elem(*args, **kwargs)
-            print('`%s` finished in %fs' % (elem.__name__, (datetime.now() - start_time).total_seconds()))
+            print('`%s` finished in %fs' % (elem.__qualname__, (datetime.now() - start_time).total_seconds()))
             return res
         return wrapped
     else:
@@ -18,3 +18,5 @@ def profile(elem):
             if inspect.isfunction(elem.__dict__[fun]):
                 setattr(elem, fun, profile(elem.__dict__[fun]))
         return elem
+
+
