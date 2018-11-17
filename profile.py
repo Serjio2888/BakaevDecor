@@ -3,25 +3,33 @@ import inspect
 from functools import wraps
 
 
+def profile_for_method(func, classname=None):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if classname:
+            print('`%s` started' % (classname+'.'+func.__name__))
+        else:
+            print('`%s` started' % (func.__name__))
+        start_time = datetime.now()
+        res = func(*args, **kwargs)
+        if classname:
+            print('`%s` finished in %fs' % (classname+'.'+func.__name__, (datetime.now() - start_time).total_seconds()))
+        else:
+            print('`%s` finished in %fs' % (func.__name__, (datetime.now() - start_time).total_seconds()))
+        return res
+
+    return wrapped
+
 def profile(elem, *args, **kwargs):
     if inspect.isfunction(elem):
-        @wraps(elem)
-        def wrapped(*args, **kwargs):
-            print('`%s` started' % (elem.__name__))
-            start_time = datetime.now()
-            res = elem(*args, **kwargs)
-            print('`%s` finished in %fs' % (elem.__name__, (datetime.now() - start_time).total_seconds()))
-            return res
-        return wrapped
+        return profile_for_method(elem)
     else:
-        for fun in elem.__dict__:
-            if inspect.isfunction(elem.__dict__[fun]):
-                a = elem.__dict__[fun]
-                print('`%s` started' % (a.__qualname__))
-                start_time = datetime.now()
-                res = elem(*args, **kwargs)
-                print('`%s` finished in %fs' % (a.__qualname__, (datetime.now() - start_time).total_seconds()))
+        classname = elem.__name__
+        for key in elem.__dict__:
+            if inspect.isfunction(elem.__dict__[key]):
+                setattr(elem, key, profile_for_method(elem.__dict__[key], classname))
         return elem
+
 
 class New:
     @profile
@@ -44,3 +52,4 @@ N.funcy()
 Oo = Old()
 Oo.funny()
 Oo.funni()
+
